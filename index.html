@@ -812,27 +812,77 @@
       if (e.target === this) closeModal();
     });
 
+    // ─── FORMSPREE ENDPOINT ───
+    const FORMSPREE = 'https://formspree.io/f/xgobeqlr';
+
     // ─── PAYMENT FORM SUBMIT ───
-    function handlePayment(e) {
+    async function handlePayment(e) {
       e.preventDefault();
+      const btn = e.target.querySelector('button[type="submit"]');
+      btn.textContent = '⏳ Submitting...';
+      btn.disabled = true;
+
       const email = document.getElementById('paymentEmail').value;
       const plan = document.getElementById('modalPlanName').textContent;
-      // Send email notification
-      window.location.href = `mailto:youremail@gmail.com?subject=New FlowDev Signup - ${plan}&body=New user signed up!%0A%0AEmail: ${email}%0APlan: ${plan}%0ADate: ${new Date().toLocaleDateString()}`;
-      closeModal();
-      showToast('🎉 Welcome to FlowDev! Check your email shortly.');
+      const name = e.target.querySelector('input[type="text"]').value;
+
+      try {
+        const res = await fetch(FORMSPREE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            name: name,
+            email: email,
+            plan: plan,
+            message: `New FlowDev signup!\n\nName: ${name}\nEmail: ${email}\nPlan: ${plan}\nDate: ${new Date().toLocaleDateString()}`
+          })
+        });
+        if (res.ok) {
+          closeModal();
+          showToast('🎉 Welcome to FlowDev! Check your email shortly.');
+          e.target.reset();
+        } else {
+          throw new Error('Failed');
+        }
+      } catch {
+        btn.textContent = '❌ Error! Try again.';
+        btn.disabled = false;
+      }
     }
 
     // ─── EMAIL CTA SIGNUP ───
-    function handleEmailSignup() {
+    async function handleEmailSignup() {
       const email = document.getElementById('ctaEmail').value;
       if (!email || !email.includes('@')) {
         alert('Please enter a valid email address!');
         return;
       }
-      window.location.href = `mailto:youremail@gmail.com?subject=New FlowDev Early Access Request&body=New early access request!%0A%0AEmail: ${email}%0ADate: ${new Date().toLocaleDateString()}`;
-      showToast('🚀 You\'re on the list! We\'ll be in touch soon.');
-      document.getElementById('ctaEmail').value = '';
+      const btn = event.target;
+      btn.textContent = '⏳ Joining...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(FORMSPREE, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+          body: JSON.stringify({
+            email: email,
+            plan: 'Early Access',
+            message: `New Early Access Request!\n\nEmail: ${email}\nDate: ${new Date().toLocaleDateString()}`
+          })
+        });
+        if (res.ok) {
+          showToast('🚀 You\'re on the list! We\'ll be in touch soon.');
+          document.getElementById('ctaEmail').value = '';
+          btn.textContent = '✅ Done!';
+          setTimeout(() => { btn.textContent = 'Get Early Access 🚀'; btn.disabled = false; }, 3000);
+        } else {
+          throw new Error('Failed');
+        }
+      } catch {
+        btn.textContent = '❌ Try again';
+        btn.disabled = false;
+      }
     }
 
     // ─── TOAST ───
@@ -868,5 +918,5 @@
       navLinks.forEach(a => { a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--text)' : ''; });
     });
   </script>
-<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a06615f74d8e338e',t:'MTc4MDU2NzE3Ng=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'a0665149e801a84b',t:'MTc4MDU2OTYwNg=='};var a=document.createElement('script');a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
 </html>

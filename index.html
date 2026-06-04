@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>FlowDev – The Developer Productivity OS</title>
+  <style>
+    /* ─── RESET & BASE ─── */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:        #0a0b0f;
+      --bg2:       #10121a;
+      --bg3:       #161926;
+      --card:      #1a1e2e;
+      --border:    #252840;
+      --accent:    #6c63ff;
+      --accent2:   #00d4ff;
+      --green:     #00e5a0;
+      --red:       #ff5470;
+      --text:      #e8eaf6;
+      --muted:     #7a7f9a;
+      --radius:    14px;
+      --glow:      0 0 40px rgba(108,99,255,.35);
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.65;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+    img { max-width: 100%; }
+
+    /* ─── NOISE OVERLAY ─── */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+      pointer-events: none; z-index: 999; opacity: .4;
+    }
+
+    /* ─── NAVBAR ─── */
+    nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 1rem 5%;
+      background: rgba(10,11,15,.85);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid var(--border);
+    }
+    .logo {
+      font-size: 1.35rem; font-weight: 800; letter-spacing: -.5px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .logo span { -webkit-text-fill-color: var(--text); }
+    .nav-links { display: flex; gap: 2rem; }
+    .nav-links a { color: var(--muted); font-size: .9rem; transition: color .2s; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-cta {
+      background: var(--accent); color: #fff; padding: .5rem 1.3rem;
+      border-radius: 8px; font-size: .9rem; font-weight: 600;
+      transition: opacity .2s, transform .2s;
+    }
+    .nav-cta:hover { opacity: .85; transform: translateY(-1px); }
+
+    /* ─── HERO ─── */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      text-align: center; padding: 7rem 5% 5rem;
+      position: relative; overflow: hidden;
+    }
+    .hero-glow {
+      position: absolute; top: 10%; left: 50%; transform: translateX(-50%);
+      width: 700px; height: 400px;
+      background: radial-gradient(ellipse, rgba(108,99,255,.25) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .badge {
+      display: inline-flex; align-items: center; gap: .5rem;
+      background: rgba(108,99,255,.12); border: 1px solid rgba(108,99,255,.35);
+      color: var(--accent2); padding: .35rem 1rem; border-radius: 50px;
+      font-size: .8rem; font-weight: 600; letter-spacing: .5px;
+      margin-bottom: 1.5rem; text-transform: uppercase;
+    }
+    .badge-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+    h1 {
+      font-size: clamp(2.6rem, 6vw, 5rem);
+      font-weight: 900; line-height: 1.1;
+      letter-spacing: -2px; margin-bottom: 1.5rem;
+    }
+    h1 .grad {
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent2) 50%, var(--green) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .hero-sub {
+      font-size: 1.15rem; color: var(--muted); max-width: 580px; margin: 0 auto 2.5rem;
+    }
+    .hero-btns { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), #9b5de5);
+      color: #fff; padding: .85rem 2rem; border-radius: 10px;
+      font-size: 1rem; font-weight: 700; border: none; cursor: pointer;
+      transition: transform .2s, box-shadow .2s;
+      box-shadow: 0 4px 24px rgba(108,99,255,.4);
+    }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 32px rgba(108,99,255,.55); }
+    .btn-ghost {
+      background: transparent; color: var(--text);
+      padding: .85rem 2rem; border-radius: 10px;
+      font-size: 1rem; font-weight: 600; border: 1px solid var(--border); cursor: pointer;
+      transition: border-color .2s, background .2s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); background: rgba(108,99,255,.08); }
+    .hero-stats {
+      display: flex; gap: 2.5rem; justify-content: center;
+      margin-top: 4rem; flex-wrap: wrap;
+    }
+    .stat { text-align: center; }
+    .stat-num { font-size: 2rem; font-weight: 900; background: linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text;-webkit-text-fill-color:transparent; }
+    .stat-label { font-size: .8rem; color: var(--muted); }
+
+    /* ─── SECTION WRAPPER ─── */
+    section { padding: 6rem 5%; }
+    .section-label {
+      text-align: center; font-size: .75rem; font-weight: 700; letter-spacing: 2px;
+      text-transform: uppercase; color: var(--accent2); margin-bottom: .75rem;
+    }
+    .section-title {
+      text-align: center; font-size: clamp(1.8rem,4vw,3rem);
+      font-weight: 800; letter-spacing: -1px; margin-bottom: 1rem;
+    }
+    .section-sub {
+      text-align: center; color: var(--muted); max-width: 560px;
+      margin: 0 auto 3.5rem; font-size: 1rem;
+    }
+
+    /* ─── PROBLEM ─── */
+    .problem-section { background: var(--bg2); }
+    .problem-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(260px,1fr));
+      gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+    }
+    .problem-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.75rem;
+      position: relative; overflow: hidden;
+      transition: border-color .3s;
+    }
+    .problem-card:hover { border-color: var(--red); }
+    .problem-card::before {
+      content:''; position:absolute; top:0;left:0;right:0;height:3px;
+      background: var(--red); opacity:.7;
+    }
+    .problem-icon { font-size: 2rem; margin-bottom: 1rem; }
+    .problem-card h3 { font-size: 1.1rem; margin-bottom: .5rem; }
+    .problem-card p { color: var(--muted); font-size: .9rem; }
+
+    /* ─── SOLUTION ─── */
+    .solution-grid {
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 4rem; align-items: center; max-width: 1100px; margin: 0 auto;
+    }
+    .solution-visual {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 1.5rem;
+      box-shadow: var(--glow);
+    }
+    .mock-header {
+      display:flex;align-items:center;gap:.5rem;margin-bottom:1.2rem;
+    }
+    .mock-dot { width:10px;height:10px;border-radius:50%; }
+    .mock-dot:nth-child(1){background:#ff5470;}
+    .mock-dot:nth-child(2){background:#ffd166;}
+    .mock-dot:nth-child(3){background:#00e5a0;}
+    .mock-bar { flex:1;height:8px;background:var(--bg3);border-radius:4px; margin-left:.5rem;}
+    .mock-tasks { display:flex;flex-direction:column;gap:.75rem; }
+    .mock-task {
+      display:flex;align-items:center;gap:.75rem;
+      background:var(--bg3);border-radius:8px;padding:.75rem 1rem;
+      font-size:.85rem;
+    }
+    .mock-task .tag {
+      font-size:.7rem;padding:.2rem .6rem;border-radius:4px;font-weight:600;
+    }
+    .tag-blue{background:rgba(108,99,255,.2);color:var(--accent);}
+    .tag-green{background:rgba(0,229,160,.2);color:var(--green);}
+    .tag-red{background:rgba(255,84,112,.2);color:var(--red);}
+    .mock-check{width:16px;height:16px;border-radius:4px;border:2px solid var(--green);display:flex;align-items:center;justify-content:center;font-size:.7rem;}
+    .mock-progress { margin-top:1.2rem; }
+    .prog-label{display:flex;justify-content:space-between;font-size:.75rem;color:var(--muted);margin-bottom:.4rem;}
+    .prog-bar{height:6px;background:var(--bg3);border-radius:3px;overflow:hidden;}
+    .prog-fill{height:100%;border-radius:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));}
+
+    .solution-points { display:flex;flex-direction:column;gap:1.5rem; }
+    .sol-point { display:flex;gap:1rem;align-items:flex-start; }
+    .sol-icon {
+      width:44px;height:44px;border-radius:10px;flex-shrink:0;
+      display:flex;align-items:center;justify-content:center;font-size:1.3rem;
+      background:rgba(108,99,255,.15);border:1px solid rgba(108,99,255,.3);
+    }
+    .sol-point h4{font-size:1rem;margin-bottom:.3rem;}
+    .sol-point p{color:var(--muted);font-size:.88rem;}
+
+    /* ─── FEATURES ─── */
+    .features-section { background: var(--bg2); }
+    .features-grid {
+      display: grid; grid-template-columns: repeat(auto-fit,minmax(300px,1fr));
+      gap: 1.5rem; max-width: 1100px; margin: 0 auto;
+    }
+    .feature-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 2rem;
+      transition: transform .3s, box-shadow .3s, border-color .3s;
+      position: relative; overflow: hidden;
+    }
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 12px 40px rgba(108,99,255,.2);
+      border-color: var(--accent);
+    }
+    .feature-card .f-icon {
+      width:50px;height:50px;border-radius:12px;margin-bottom:1.2rem;
+      display:flex;align-items:center;justify-content:center;font-size:1.5rem;
+      background:rgba(108,99,255,.12);border:1px solid rgba(108,99,255,.25);
+    }
+    .feature-card h3 { font-size:1.05rem;margin-bottom:.6rem; }
+    .feature-card p { color:var(--muted);font-size:.88rem; }
+    .feature-tag {
+      display:inline-block;margin-top:.9rem;font-size:.7rem;font-weight:700;
+      letter-spacing:.5px;text-transform:uppercase;color:var(--accent2);
+    }
+
+    /* ─── PRICING ─── */
+    .pricing-grid {
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:1.5rem;max-width:960px;margin:0 auto;
+    }
+    .price-card {
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--radius);padding:2rem;
+      transition:transform .3s;
+    }
+    .price-card:hover{transform:translateY(-4px);}
+    .price-card.popular {
+      border-color:var(--accent);
+      box-shadow:0 0 40px rgba(108,99,255,.25);
+      position:relative;
+    }
+    .popular-badge {
+      position:absolute;top:-13px;left:50%;transform:translateX(-50%);
+      background:linear-gradient(135deg,var(--accent),var(--accent2));
+      color:#fff;font-size:.72rem;font-weight:700;letter-spacing:.5px;
+      padding:.3rem 1rem;border-radius:50px;text-transform:uppercase;white-space:nowrap;
+    }
+    .price-plan{font-size:.85rem;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:.6rem;}
+    .price-amount{font-size:3rem;font-weight:900;letter-spacing:-2px;line-height:1;}
+    .price-amount span{font-size:1rem;font-weight:400;color:var(--muted);}
+    .price-desc{color:var(--muted);font-size:.88rem;margin:.6rem 0 1.4rem;}
+    .price-features{list-style:none;display:flex;flex-direction:column;gap:.65rem;margin-bottom:1.8rem;}
+    .price-features li{display:flex;align-items:center;gap:.6rem;font-size:.9rem;color:var(--muted);}
+    .price-features li::before{content:'✓';color:var(--green);font-weight:700;flex-shrink:0;}
+    .price-features li.no{color:#444;}
+    .price-features li.no::before{content:'✕';color:#444;}
+    .btn-plan{
+      width:100%;padding:.85rem;border-radius:10px;font-size:.95rem;font-weight:700;
+      cursor:pointer;border:none;transition:all .2s;
+    }
+    .btn-plan-primary{background:linear-gradient(135deg,var(--accent),#9b5de5);color:#fff;box-shadow:0 4px 20px rgba(108,99,255,.35);}
+    .btn-plan-primary:hover{transform:translateY(-1px);box-shadow:0 8px 28px rgba(108,99,255,.5);}
+    .btn-plan-ghost{background:transparent;color:var(--text);border:1px solid var(--border);}
+    .btn-plan-ghost:hover{border-color:var(--accent);background:rgba(108,99,255,.08);}
+
+    /* ─── TESTIMONIALS ─── */
+    .testimonials-section{background:var(--bg2);}
+    .testimonials-grid{
+      display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+      gap:1.5rem;max-width:1100px;margin:0 auto;
+    }
+    .testi-card{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--radius);padding:1.8rem;
+      transition:border-color .3s;
+    }
+    .testi-card:hover{border-color:rgba(108,99,255,.5);}
+    .stars{color:#ffd166;font-size:1rem;margin-bottom:1rem;letter-spacing:2px;}
+    .testi-text{color:var(--muted);font-size:.9rem;margin-bottom:1.4rem;line-height:1.7;}
+    .testi-author{display:flex;align-items:center;gap:.75rem;}
+    .avatar{
+      width:40px;height:40px;border-radius:50%;
+      display:flex;align-items:center;justify-content:center;
+      font-size:1rem;font-weight:700;color:#fff;flex-shrink:0;
+    }
+    .testi-name{font-size:.9rem;font-weight:700;}
+    .testi-role{font-size:.78rem;color:var(--muted);}
+
+    /* ─── FAQ ─── */
+    .faq-list{max-width:720px;margin:0 auto;display:flex;flex-direction:column;gap:1rem;}
+    .faq-item{
+      background:var(--card);border:1px solid var(--border);
+      border-radius:var(--radius);overflow:hidden;
+    }
+    .faq-q{
+      padding:1.2rem 1.5rem;font-weight:600;cursor:pointer;
+      display:flex;justify-content:space-between;align-items:center;
+      transition:background .2s;
+    }
+    .faq-q:hover{background:rgba(108,99,255,.06);}
+    .faq-icon{font-size:1.2rem;color:var(--accent);font-weight:300;transition:transform .3s;}
+    .faq-a{
+      padding:0 1.5rem;max-height:0;overflow:hidden;
+      color:var(--muted);font-size:.9rem;line-height:1.7;
+      transition:max-height .35s ease, padding .35s ease;
+    }
+    .faq-item.open .faq-a{max-height:200px;padding:0 1.5rem 1.2rem;}
+    .faq-item.open .faq-icon{transform:rotate(45deg);}
+
+    /* ─── CTA ─── */
+    .cta-section{
+      text-align:center;
+      background:linear-gradient(135deg,rgba(108,99,255,.12) 0%,rgba(0,212,255,.08) 100%);
+      border-top:1px solid var(--border);border-bottom:1px solid var(--border);
+    }
+    .cta-section h2{font-size:clamp(2rem,5vw,3.5rem);font-weight:900;letter-spacing:-1px;margin-bottom:1rem;}
+    .cta-section p{color:var(--muted);max-width:500px;margin:0 auto 2.5rem;}
+    .cta-input-row{
+      display:flex;gap:1rem;max-width:480px;margin:0 auto;flex-wrap:wrap;justify-content:center;
+    }
+    .cta-input{
+      flex:1;min-width:220px;padding:.85rem 1.2rem;
+      background:var(--card);border:1px solid var(--border);
+      border-radius:10px;color:var(--text);font-size:1rem;
+      outline:none;transition:border-color .2s;
+    }
+    .cta-input:focus{border-color:var(--accent);}
+    .cta-input::placeholder{color:var(--muted);}
+    .cta-note{margin-top:1rem;color:var(--muted);font-size:.8rem;}
+
+    /* ─── FOOTER ─── */
+    footer{
+      background:var(--bg2);border-top:1px solid var(--border);
+      padding:3rem 5% 2rem;
+    }
+    .footer-grid{
+      display:grid;grid-template-columns:2fr 1fr 1fr 1fr;
+      gap:2rem;max-width:1100px;margin:0 auto 2.5rem;
+    }
+    .footer-brand .logo{font-size:1.2rem;display:inline-block;margin-bottom:.75rem;}
+    .footer-brand p{color:var(--muted);font-size:.85rem;max-width:240px;}
+    .footer-col h5{font-size:.8rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:.9rem;}
+    .footer-col a{display:block;color:var(--muted);font-size:.85rem;margin-bottom:.5rem;transition:color .2s;}
+    .footer-col a:hover{color:var(--text);}
+    .footer-bottom{
+      border-top:1px solid var(--border);padding-top:1.5rem;
+      display:flex;justify-content:space-between;align-items:center;
+      flex-wrap:wrap;gap:1rem;
+      color:var(--muted);font-size:.8rem;
+      max-width:1100px;margin:0 auto;
+    }
+    .social-links{display:flex;gap:1rem;}
+    .social-links a{
+      width:34px;height:34px;border-radius:8px;border:1px solid var(--border);
+      display:flex;align-items:center;justify-content:center;
+      color:var(--muted);font-size:.9rem;transition:all .2s;
+    }
+    .social-links a:hover{border-color:var(--accent);color:var(--accent);}
+
+    /* ─── SCROLL ANIMATIONS ─── */
+    .fade-up{opacity:0;transform:translateY(30px);transition:opacity .6s ease,transform .6s ease;}
+    .fade-up.visible{opacity:1;transform:translateY(0);}
+
+    /* ─── RESPONSIVE ─── */
+    @media(max-width:768px){
+      .nav-links{display:none;}
+      .solution-grid{grid-template-columns:1fr;}
+      .footer-grid{grid-template-columns:1fr 1fr;}
+    }
+    @media(max-width:480px){
+      .footer-grid{grid-template-columns:1fr;}
+      .hero-stats{gap:1.5rem;}
+    }
+  </style>
+</head>
+<body>
+
+  <!-- NAVBAR -->
+  <nav>
+    <div class="logo">Flow<span>Dev</span></div>
+    <div class="nav-links">
+      <a href="#problem">Problem</a>
+      <a href="#features">Features</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+    </div>
+    <a href="#cta" class="nav-cta">Get Early Access</a>
+  </nav>
+
+  <!-- HERO -->
+  <section class="hero" id="home">
+    <div class="hero-glow"></div>
+    <div class="badge fade-up visible">
+      <span class="badge-dot"></span>
+      Now in Beta · Join 2,400+ Developers
+    </div>
+    <h1 class="fade-up visible">
+      Stop Context-Switching.<br>
+      <span class="grad">Ship More. Stress Less.</span>
+    </h1>
+    <p class="hero-sub fade-up visible">
+      FlowDev is the all-in-one productivity OS built for developers—combining task management, focus tracking, and team sync in one distraction-free workspace.
+    </p>
+    <div class="hero-btns fade-up visible">
+      <button class="btn-primary" onclick="document.getElementById('cta').scrollIntoView({behavior:'smooth'})">🚀 Start for Free</button>
+      <button class="btn-ghost" onclick="document.getElementById('features').scrollIntoView({behavior:'smooth'})">See How It Works →</button>
+    </div>
+    <div class="hero-stats fade-up visible">
+      <div class="stat"><div class="stat-num">2.4k+</div><div class="stat-label">Developers</div></div>
+      <div class="stat"><div class="stat-num">87%</div><div class="stat-label">More focused</div></div>
+      <div class="stat"><div class="stat-num">3.2x</div><div class="stat-label">Tasks shipped</div></div>
+      <div class="stat"><div class="stat-num">4.9★</div><div class="stat-label">Average rating</div></div>
+    </div>
+  </section>
+
+  <!-- PROBLEM -->
+  <section class="problem-section" id="problem">
+    <div class="section-label fade-up">The Problem</div>
+    <h2 class="section-title fade-up">Developer productivity is <span style="color:var(--red)">broken</span></h2>
+    <p class="section-sub fade-up">Between Slack pings, Jira boards, GitHub notifications, and meeting overload—your best work never gets done.</p>
+    <div class="problem-grid">
+      <div class="problem-card fade-up">
+        <div class="problem-icon">😵‍💫</div>
+        <h3>Constant Context-Switching</h3>
+        <p>The average developer switches tools 13+ times per hour, losing up to 40% of productive time just regaining focus.</p>
+      </div>
+      <div class="problem-card fade-up">
+        <div class="problem-icon">📋</div>
+        <h3>Scattered Task Management</h3>
+        <p>Tasks live in Notion, Jira, Linear, GitHub Issues, Slack, and sticky notes. Nothing is in one place—ever.</p>
+      </div>
+      <div class="problem-card fade-up">
+        <div class="problem-icon">⏱️</div>
+        <h3>No Deep Work Time</h3>
+        <p>Meetings, standups, and pings fragment your day into useless 20-minute chunks. Real coding needs 2+ hour blocks.</p>
+      </div>
+      <div class="problem-card fade-up">
+        <div class="problem-icon">🔔</div>
+        <h3>Notification Overload</h3>
+        <p>100+ notifications daily from 6+ apps. Each one breaks your flow state—and rebuilding it takes 23 minutes on average.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- SOLUTION -->
+  <section id="solution" style="background:var(--bg);">
+    <div class="section-label fade-up">The Solution</div>
+    <h2 class="section-title fade-up">One workspace. <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">Zero distractions.</span></h2>
+    <p class="section-sub fade-up">FlowDev unifies everything you need to ship code—without the noise that kills your momentum.</p>
+    <div class="solution-grid">
+      <div class="solution-visual fade-up">
+        <div class="mock-header">
+          <div class="mock-dot"></div><div class="mock-dot"></div><div class="mock-dot"></div>
+          <div class="mock-bar"></div>
+        </div>
+        <div style="font-size:.75rem;color:var(--muted);margin-bottom:1rem;">📅 Today's Sprint &nbsp;·&nbsp; <span style="color:var(--green)">4 of 7 done</span></div>
+        <div class="mock-tasks">
+          <div class="mock-task">
+            <div class="mock-check" style="background:rgba(0,229,160,.15);">✓</div>
+            <span style="flex:1;text-decoration:line-through;color:var(--muted);">Fix auth middleware bug</span>
+            <span class="tag tag-green">Done</span>
+          </div>
+          <div class="mock-task">
+            <div class="mock-check" style="background:rgba(0,229,160,.15);">✓</div>
+            <span style="flex:1;text-decoration:line-through;color:var(--muted);">Write unit tests for API</span>
+            <span class="tag tag-green">Done</span>
+          </div>
+          <div class="mock-task" style="border:1px solid rgba(108,99,255,.4);">
+            <div class="mock-check"></div>
+            <span style="flex:1;">Implement dashboard filters</span>
+            <span class="tag tag-blue">In Progress</span>
+          </div>
+          <div class="mock-task">
+            <div class="mock-check"></div>
+            <span style="flex:1;color:var(--muted);">Code review – PR #48</span>
+            <span class="tag tag-red">Urgent</span>
+          </div>
+          <div class="mock-task">
+            <div class="mock-check"></div>
+            <span style="flex:1;color:var(--muted);">Deploy to staging</span>
+            <span class="tag tag-blue">Later</span>
+          </div>
+        </div>
+        <div class="mock-progress">
+          <div class="prog-label"><span>Sprint Progress</span><span>57%</span></div>
+          <div class="prog-bar"><div class="prog-fill" style="width:57%;"></div></div>
+        </div>
+        <div style="margin-top:1rem;padding:.75rem 1rem;background:rgba(108,99,255,.08);border-radius:8px;border:1px solid rgba(108,99,255,.2);font-size:.78rem;color:var(--accent2);">
+          🎯 Focus Mode active &nbsp;·&nbsp; 1h 24m remaining &nbsp;·&nbsp; Notifications paused
+        </div>
+      </div>
+      <div class="solution-points">
+        <div class="sol-point fade-up">
+          <div class="sol-icon">🎯</div>
+          <div>
+            <h4>AI-Powered Task Prioritization</h4>
+            <p>FlowDev analyzes your deadlines, workload, and energy levels to automatically surface the most important task to work on right now.</p>
+          </div>
+        </div>
+        <div class="sol-point fade-up">
+          <div class="sol-icon">⚡</div>
+          <div>
+            <h4>Deep Focus Mode</h4>
+            <p>Block distractions, silence notifications, and enter a focused work session. FlowDev tracks your session and protects your flow state.</p>
+          </div>
+        </div>
+        <div class="sol-point fade-up">
+          <div class="sol-icon">🔗</div>
+          <div>
+            <h4>GitHub, Jira & Slack Sync</h4>
+            <p>FlowDev pulls tasks, PRs, and mentions from all your tools into one unified inbox. Never check 5 apps again.</p>
+          </div>
+        </div>
+        <div class="sol-point fade-up">
+          <div class="sol-icon">📊</div>
+          <div>
+            <h4>Productivity Insights</h4>
+            <p>See where your time actually goes. Weekly reports show your deep work hours, task velocity, and focus trends over time.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FEATURES -->
+  <section class="features-section" id="features">
+    <div class="section-label fade-up">Features</div>
+    <h2 class="section-title fade-up">Everything a developer needs to <span style="color:var(--accent2);">ship faster</span></h2>
+    <p class="section-sub fade-up">Powerful features that fit into your existing workflow—not replace it.</p>
+    <div class="features-grid">
+      <div class="feature-card fade-up">
+        <div class="f-icon">🤖</div>
+        <h3>AI Task Breakdown</h3>
+        <p>Paste a feature request and FlowDev breaks it into actionable dev tasks with time estimates automatically.</p>
+        <span class="feature-tag">↑ Save 45 min/day</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="f-icon">⏰</div>
+        <h3>Smart Scheduling</h3>
+        <p>Auto-schedules your tasks around your meetings, energy peaks, and deadlines—no manual calendar juggling.</p>
+        <span class="feature-tag">↑ 2x more deep work</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="f-icon">🔔</div>
+        <h3>Unified Inbox</h3>
+        <p>GitHub PRs, Jira tickets, Slack mentions—all in one smart inbox. Prioritized by urgency, not recency.</p>
+        <span class="feature-tag">↑ -70% notification noise</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="f-icon">🌊</div>
+        <h3>Flow State Tracker</h3>
+        <p>FlowDev detects when you're in flow and shields you from interruptions. Tracks your daily peak hours.</p>
+        <span class="feature-tag">↑ 87% more focus</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="f-icon">👥</div>
+        <h3>Team Sync Board</h3>
+        <p>See what everyone is working on without async standups. Quiet, visual, async-first team awareness.</p>
+        <span class="feature-tag">↑ Skip 3 meetings/week</span>
+      </div>
+      <div class="feature-card fade-up">
+        <div class="f-icon">📈</div>
+        <h3>Weekly Dev Reports</h3>
+        <p>Auto-generated reports show your shipped tasks, focus time, and blockers. Share with your manager in 1 click.</p>
+        <span class="feature-tag">↑ Full visibility</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section id="pricing" style="background:var(--bg);">
+    <div class="section-label fade-up">Pricing</div>
+    <h2 class="section-title fade-up">Simple, honest pricing</h2>
+    <p class="section-sub fade-up">Start free. Upgrade when you need more power. No hidden fees, no surprises.</p>
+    <div class="pricing-grid">
+      <div class="price-card fade-up">
+        <div class="price-plan">Starter</div>
+        <div class="price-amount">$0 <span>/ mo</span></div>
+        <div class="price-desc">Perfect for solo devs just getting started.</div>
+        <ul class="price-features">
+          <li>Up to 50 tasks</li>
+          <li>1 integration (GitHub or Jira)</li>
+          <li>Basic Focus Mode</li>
+          <li>Weekly reports</li>
+          <li class="no">AI Task Breakdown</li>
+          <li class="no">Team Sync Board</li>
+          <li class="no">Priority support</li>
+        </ul>
+        <button class="btn-plan btn-plan-ghost">Get Started Free</button>
+      </div>
+      <div class="price-card popular fade-up">
+        <div class="popular-badge">⭐ Most Popular</div>
+        <div class="price-plan">Pro</div>
+        <div class="price-amount">$12 <span>/ mo</span></div>
+        <div class="price-desc">For individual devs who want to ship at peak velocity.</div>
+        <ul class="price-features">
+          <li>Unlimited tasks</li>
+          <li>All integrations (GitHub, Jira, Slack, Linear)</li>
+          <li>Advanced Focus Mode + Flow Tracker</li>
+          <li>AI Task Breakdown</li>
+          <li>Smart Scheduling</li>
+          <li>Detailed analytics & reports</li>
+          <li>Email support</li>
+        </ul>
+        <button class="btn-plan btn-plan-primary">Start 14-Day Free Trial</button>
+      </div>
+      <div class="price-card fade-up">
+        <div class="price-plan">Team</div>
+        <div class="price-amount">$39 <span>/ mo</span></div>
+        <div class="price-desc">For engineering teams that want async-first productivity.</div>
+        <ul class="price-features">
+          <li>Everything in Pro</li>
+          <li>Up to 10 team members</li>
+          <li>Team Sync Board</li>
+          <li>Manager dashboards</li>
+          <li>SSO & admin controls</li>
+          <li>API access</li>
+          <li>Priority & Slack support</li>
+        </ul>
+        <button class="btn-plan btn-plan-ghost">Start Team Trial</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials-section" id="testimonials">
+    <div class="section-label fade-up">Testimonials</div>
+    <h2 class="section-title fade-up">Loved by developers worldwide</h2>
+    <p class="section-sub fade-up">Real developers sharing real results from using FlowDev.</p>
+    <div class="testimonials-grid">
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"I used to switch between 6 different apps just to see what I should work on next. FlowDev replaced all of them. I'm shipping 2x more features with half the stress."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#6c63ff,#00d4ff);">AK</div>
+          <div><div class="testi-name">Arun Kumar</div><div class="testi-role">Senior SWE @ Stripe</div></div>
+        </div>
+      </div>
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"The AI task breakdown is a game-changer. I paste a GitHub issue and get a full implementation plan in 10 seconds. It's like having a senior dev pair with me."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#ff5470,#ffd166);">SL</div>
+          <div><div class="testi-name">Sophie Laurent</div><div class="testi-role">Fullstack Dev @ Vercel</div></div>
+        </div>
+      </div>
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Focus Mode has changed my mornings completely. 3 hours of uninterrupted deep work before 11 AM. My output has never been higher."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#00e5a0,#00d4ff);">MR</div>
+          <div><div class="testi-name">Marcus Reid</div><div class="testi-role">Backend Engineer @ Linear</div></div>
+        </div>
+      </div>
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"Our team dropped 3 weekly standups after switching to FlowDev's Team Sync Board. Everyone knows what's happening without a single meeting."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#9b5de5,#6c63ff);">PN</div>
+          <div><div class="testi-name">Priya Nair</div><div class="testi-role">Engineering Manager @ Razorpay</div></div>
+        </div>
+      </div>
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"I was skeptical about another productivity app. But FlowDev actually respects developers. It doesn't add busywork—it removes it."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#ffd166,#ff5470);">JC</div>
+          <div><div class="testi-name">Jake Chen</div><div class="testi-role">Indie Dev & Founder</div></div>
+        </div>
+      </div>
+      <div class="testi-card fade-up">
+        <div class="stars">★★★★★</div>
+        <p class="testi-text">"The weekly report alone justifies the cost. I send it to my team lead every Friday instead of writing status updates. Saves me 2 hours every week."</p>
+        <div class="testi-author">
+          <div class="avatar" style="background:linear-gradient(135deg,#00d4ff,#00e5a0);">RA</div>
+          <div><div class="testi-name">Riya Ahmed</div><div class="testi-role">Frontend Lead @ Swiggy</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section id="faq" style="background:var(--bg);">
+    <div class="section-label fade-up">FAQ</div>
+    <h2 class="section-title fade-up">Questions? We have answers.</h2>
+    <p class="section-sub fade-up">Everything you need to know before signing up.</p>
+    <div class="faq-list">
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Does FlowDev replace my existing tools like Jira or GitHub?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">No—FlowDev integrates with your existing tools. It pulls tasks from Jira, PRs from GitHub, and messages from Slack into one unified workspace. You keep your tools; FlowDev removes the friction between them.</div>
+      </div>
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>How does the 14-day free trial work?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Sign up and get full access to Pro features for 14 days—no credit card required. At the end of the trial, you can choose a plan or drop to the free Starter tier. No gotchas.</div>
+      </div>
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Is my data secure?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Yes. FlowDev uses AES-256 encryption at rest and TLS 1.3 in transit. We never sell your data. We're SOC 2 Type II compliant and GDPR-ready. You own your data—always.</div>
+      </div>
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Can I use FlowDev for a team?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Absolutely! The Team plan supports up to 10 members and includes the Team Sync Board, manager dashboards, and SSO. Need more than 10 seats? Contact us for enterprise pricing.</div>
+      </div>
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Which integrations are supported?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">FlowDev currently integrates with GitHub, GitLab, Jira, Linear, Slack, Notion, and Asana. We're adding more integrations every month based on user feedback.</div>
+      </div>
+      <div class="faq-item fade-up">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          <span>Can I cancel anytime?</span>
+          <span class="faq-icon">+</span>
+        </div>
+        <div class="faq-a">Yes, cancel anytime with no questions asked. Your data is exportable at any time, and you'll retain access until the end of your billing period.</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="cta-section" id="cta">
+    <div class="section-label fade-up">Get Started</div>
+    <h2 class="fade-up">Ready to enter <span style="background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;">flow state</span>?</h2>
+    <p class="fade-up">Join 2,400+ developers already shipping faster with FlowDev. Free to start, no credit card needed.</p>
+    <div class="cta-input-row fade-up">
+      <input type="email" class="cta-input" placeholder="you@company.com" />
+      <button class="btn-primary" style="white-space:nowrap;">Get Early Access 🚀</button>
+    </div>
+    <p class="cta-note fade-up">✅ Free 14-day trial &nbsp;·&nbsp; ✅ No credit card &nbsp;·&nbsp; ✅ Cancel anytime</p>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo">Flow<span style="-webkit-text-fill-color:var(--text)">Dev</span></div>
+        <p>The productivity OS built exclusively for developers and engineering teams.</p>
+      </div>
+      <div class="footer-col">
+        <h5>Product</h5>
+        <a href="#features">Features</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#">Changelog</a>
+        <a href="#">Roadmap</a>
+      </div>
+      <div class="footer-col">
+        <h5>Company</h5>
+        <a href="#">About</a>
+        <a href="#">Blog</a>
+        <a href="#">Careers</a>
+        <a href="#">Press</a>
+      </div>
+      <div class="footer-col">
+        <h5>Legal</h5>
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms of Service</a>
+        <a href="#">Cookie Policy</a>
+        <a href="#">Security</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>© 2026 FlowDev Inc. All rights reserved.</span>
+      <div class="social-links">
+        <a href="#" title="Twitter">𝕏</a>
+        <a href="#" title="GitHub">⌨</a>
+        <a href="#" title="LinkedIn">in</a>
+        <a href="#" title="Discord">◈</a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // FAQ Toggle
+    function toggleFaq(el) {
+      const item = el.parentElement;
+      const wasOpen = item.classList.contains('open');
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+      if (!wasOpen) item.classList.add('open');
+    }
+
+    // Scroll Animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(e => {
+        if (e.isIntersecting) {
+          e.target.classList.add('visible');
+          observer.unobserve(e.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.fade-up:not(.visible)').forEach(el => observer.observe(el));
+
+    // Smooth active nav link highlight
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.nav-links a');
+    window.addEventListener('scroll', () => {
+      let current = '';
+      sections.forEach(s => {
+        if (window.scrollY >= s.offsetTop - 120) current = s.id;
+      });
+      navLinks.forEach(a => {
+        a.style.color = a.getAttribute('href') === `#${current}` ? 'var(--text)' : '';
+      });
+    });
+  </script>
+</body>
+</html>
